@@ -11,6 +11,7 @@ automatically require all of the necessary dependency gems.  Those gems are as f
 
 * spree_api
 * spree_auth
+* spree_cmd
 * spree_core
 * spree_dash
 * spree_promo
@@ -22,29 +23,50 @@ and perhaps combine it with your own custom authorization scheme instead of usin
 
 [![Build Status](https://secure.travis-ci.org/spree/spree.png)](http://travis-ci.org/spree/spree)
 
+Installation
+------------
+
+The fastest way to get started is by using the spree command line tool
+available in the spree gem. It will add Spree to an existing Rails
+application.
+
+    $ gem install spree
+    $ rails new my_store
+    $ spree install my_store
+
+This will add the Spree gem, create intitializers, copy migrations and
+optionally generate sample products and orders.
+
+If you get an "Unable to resolve dependencies" error when installing the Spree gem then you can try installing just the spree_cmd gem which should avoid any circular dependency issues.
+
+    $ gem install spree_cmd
+
+To auto accept all prompts while running the install generator, pass -A as an option
+
+    $ spree install my_store -A
+
 Using the Gem
 -------------
 
-Start by adding the gem to your existing Rails 3.x application's Gemfile
+You can manually add Spree to your Rails 3.x application. Add Spree to
+your Gemfile.
 
-    gem 'spree'
+    gem 'spree', '1.0.0'
 
 Update your bundle
 
     $ bundle install
 
-Use the install generator to do the basic setup. The install generator will prompt you to run migrations, setup some
-basic data, and load sample products, orders, etc.
+Use the install generator to copy migrations, intializers and generate
+sample data.
 
-    $ rails g spree:site
+    $ rails g spree:install
 
-To auto accept all prompts while running the install generator, pass -A as an option
+You can avoid running migrations or generating seed and sample data
 
-	$ rails g spree:site -A
+    $ rails g spree:install --migrate=false --sample=false --seed=false
 
-If you chose to ignore the prompts while running the basic install
-generator you can manually run migrations and load basic data with the following
-commands
+You can always perform the steps later.
 
     $ bundle exec rake db:migrate
     $ bundle exec rake db:seed
@@ -52,15 +74,6 @@ commands
 To manually load sample products, orders, etc., run the following rake task
 
     $ bundle exec rake spree_sample:load
-
-Peformance
-----------
-
-Rails 3.1 introduced a concept known as the asset pipeline.  Unfortunately it results in poor performance when running your site in development mode (production mode is unaffected.)  You may want to run the following command when testing locally in development mode
-
-    $ bundle exec rake assets:precompile:nondigest
-
-Using the precompile rake task in development will prevent any changes to asset files from being automatically included in when you reload the page. You must re-run the precompile task for changes to become available.
 
 Browse Store
 ------------
@@ -101,15 +114,15 @@ The source code is essentially a collection of gems.  Spree is meant to be run w
 Performance
 -----------
 
-You may noticed that your Spree store runs slowly in development mode.  This is a side-effect of how Rails works in development mode which is to continuous reload your Ruby objects on each request.  The introduction of the asset pipeline in Rails 3.1 made default performance in development mode significantly worse.  There are, however, a few tricks to speeding up performance.
+You may noticed that your Spree store runs slowly in development mode.  This is a side-effect of how Rails works in development mode which is to continuous reload your Ruby objects on each request.  The introduction of the asset pipeline in Rails 3.1 made default performance in development mode significantly worse.  There are, however, a few tricks to speeding up performance in development mode.
 
 You can recompile your assets as follows:
 
-        $ bundle exec rake assets:precompile RAILS_ENV=development
+    $ bundle exec rake assets:precompile:nondigest
 
 If you want to remove precompiled assets (recommended before you commit to Git and push your changes) use the following rake task:
 
-        $ bundle exec rake assets:clean
+    $ bundle exec rake assets:clean
 
 
 

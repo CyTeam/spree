@@ -18,6 +18,7 @@ module Spree
         ActiveSupport::Notifications.subscribe(/^spree\./) do |*args|
           event_name, start_time, end_time, id, payload = args
           Activator.active.event_name_starts_with(event_name).each do |activator|
+            payload[:event_name] = event_name
             activator.activate(payload)
           end
         end
@@ -69,7 +70,7 @@ module Spree
       end
 
       # sets the manifests / assets to be precompiled
-      initializer "spree.assets.precompile", :group => :assets do |app|
+      initializer "spree.assets.precompile" do |app|
         app.config.assets.precompile += ['store/all.*', 'admin/all.*', 'admin/orders/edit_form.js', 'jqPlot/excanvas.min.js', 'admin/images/new.js', 'jquery.jstree/themes/apple/*']
       end
 

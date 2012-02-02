@@ -3,7 +3,7 @@ var initProductRuleSourceField = function(){
 
   $products_source_field = jQuery('.products_rule_products_source_field input');
   $products_source_field.click(function() {
-    $rule_container = jQuery(this).parents('.promotion-rule');
+    $rule_container = jQuery(this).parents('.promotion_rule');
     if(this.checked){
       if(this.value == 'manual'){
         $rule_container.find('.products_rule_products').show();
@@ -21,6 +21,8 @@ var initProductRuleSourceField = function(){
 };
 
 var initProductActions = function(){
+
+  $("#add_product_name").product_autocomplete();
 
   $('.calculator-fields').each(function(){
     var $fields_container = $(this);
@@ -42,7 +44,6 @@ var initProductActions = function(){
       }
     });
   });
-
 
   //
   // CreateLineItems Promotion Action
@@ -76,7 +77,7 @@ var initProductActions = function(){
     };
     setupRemoveLineItems();
     // Add line item to list
-    $(".promotion_action.create_line_items button.add").live('click',function(e){
+    $(".promotion_action.create_line_items button.add").unbind('click').click(function(e){
       var $container = $(this).parents('.promotion_action');
       var product_name = $container.find("input[name='add_product_name']").val();
       var variant_id = $container.find("input[name='add_variant_id']").val();
@@ -86,7 +87,7 @@ var initProductActions = function(){
         var newRow = "<tr><td>" + product_name + "</td><td>" + quantity + "</td><td><img src='/assets/admin/icons/cross.png' /></td></tr>";
         $container.find('table').append(newRow);
         // Add to serialized string in hidden text field
-        var $hiddenField = $container.find("input[type='hidden']");
+        var $hiddenField = $container.find(".line_items_string");
         $hiddenField.val($hiddenField.val() + "," + variant_id + "x" + quantity);
         setupRemoveLineItems();
         hideOrShowItemTables();
@@ -101,6 +102,14 @@ var initProductActions = function(){
 $(document).ready(function() {
   initProductRuleSourceField();
   initProductActions();
+
+  // toggle fields for specific events
+  $('#promotion_event_name').change(function() {
+    $('#promotion_code_field').toggle($('#promotion_event_name').val() == 'spree.checkout.coupon_code_added');
+    $('#promotion_path_field').toggle($('#promotion_event_name').val() == 'spree.content.visited');
+  });
+  $('#promotion_event_name').change();
+
 });
 
 

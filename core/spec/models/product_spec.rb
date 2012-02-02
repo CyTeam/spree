@@ -7,6 +7,35 @@ describe Spree::Product do
     reset_spree_preferences
   end
 
+  context "#on_hand=" do
+    it "should not complain of a missing master" do
+      product = Spree::Product.new
+      product.on_hand = 5
+    end
+  end
+
+  it "should always have a master variant" do
+    product = Spree::Product.new
+    product.master.should_not be_nil
+  end
+
+  context "#on_hand" do
+    let(:product) do
+      product = stub_model(Spree::Product)
+      product.stub :master => stub_model(Spree::Variant)
+      product
+    end
+
+    # Regression test for #898
+    context 'returns the correct number of products on hand' do
+      before do
+        Spree::Config.set :track_inventory_levels => true
+        product.master.stub :on_hand => 2
+      end
+      specify { product.on_hand.should == 2 }
+    end
+  end
+
   context "shoulda validations" do
     let(:product) {Factory(:product)}
     it { should belong_to(:tax_category) }
@@ -31,6 +60,7 @@ describe Spree::Product do
 
       context "permalink should be incremented until the value is not taken" do
         before do
+          @other_product = Factory(:product, :name => 'zoo')
           @product1 = Factory(:product, :name => 'foo')
           @product2 = Factory(:product, :name => 'foo')
           @product3 = Factory(:product, :name => 'foo')
@@ -39,6 +69,17 @@ describe Spree::Product do
           @product1.permalink.should == 'foo'
           @product2.permalink.should == 'foo-1'
           @product3.permalink.should == 'foo-2'
+        end
+      end
+
+      context "permalink should be incremented until the value is not taken when there are more than 10 products" do
+        before do
+          @products = 0.upto(11).map do
+            Factory(:product, :name => 'foo')
+          end
+        end
+        it "should have valid permalink" do
+          @products[11].permalink.should == 'foo-11'
         end
       end
 
@@ -83,29 +124,21 @@ describe Spree::Product do
 
   end
 
-  context '#add_properties_and_option_types_from_prototype' do
-    let!(:property) { stub_model(Spree::Property) }
-
-    let!(:prototype) do
-      prototype = stub_model(Spree::Prototype)
-      prototype.stub :properties => [property]
-      prototype.stub :option_types => [stub_model(Spree::OptionType)] 
-      prototype
+  context '#create' do
+    before do
+      @prototype = Factory(:prototype)
+      @product = Spree::Product.new(:name => "Foo", :price => 1.99)
     end
 
-    let(:product) do
-      product = stub_model(Spree::Product, :prototype_id => prototype.id)
-      # The `set_master_variant_defaults` callback requires a master
-      product.stub :master => stub_model(Spree::Variant)
-      product
+    context "when prototype is supplied" do
+      before { @product.prototype_id = @prototype.id }
+
+      it "should create properties based on the prototype" do
+        @product.save
+        @product.properties.count.should == 1
+      end
     end
 
-    it 'should have one property' do
-      Spree::Prototype.stub :find_by_id => prototype
-      product.product_properties.should_receive(:create).with(:property => property)
-      product.should_receive(:option_types=).with(prototype.option_types)
-      product.run_callbacks(:create)
-    end
   end
 
   context '#has_stock?' do

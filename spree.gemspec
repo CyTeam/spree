@@ -11,13 +11,11 @@ Gem::Specification.new do |s|
   s.files        = Dir['README.md', 'lib/**/*']
   s.require_path = 'lib'
   s.requirements << 'none'
-  s.bindir       = 'lib/spree/bin'
-  s.executables  = %w(spree)
   s.required_ruby_version     = '>= 1.8.7'
   s.required_rubygems_version = ">= 1.3.6"
 
   s.author       = 'Sean Schofield'
-  s.email        = 'sean@railsdog.com'
+  s.email        = 'sean@spreecommerce.com'
   s.homepage     = 'http://spreecommerce.com'
 
   s.add_dependency 'spree_core', version
@@ -26,4 +24,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'spree_dash', version
   s.add_dependency 'spree_sample', version
   s.add_dependency 'spree_promo', version
+  s.add_dependency 'spree_cmd', version
 end

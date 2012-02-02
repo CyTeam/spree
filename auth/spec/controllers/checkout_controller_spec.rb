@@ -8,6 +8,9 @@ describe Spree::CheckoutController do
   before do
     order.stub :checkout_allowed? => true, :user => user, :new_record? => false
     controller.stub :current_order => order
+    # TODO: Really, this shouldn't be in effect here.
+    # We should only be testing for auth's decorations
+    controller.stub :apply_pending_promotions
     controller.stub :current_user => nil
   end
 
@@ -155,14 +158,14 @@ describe Spree::CheckoutController do
     it 'should redirect to the checkout_path after saving' do
       order.stub :update_attributes => true
       controller.stub :check_authorization
-      put :update_registration, { :order => { :email => 'jobs@railsdog.com' } }
+      put :update_registration, { :order => { :email => 'jobs@spreecommerce.com' } }
       response.should redirect_to spree.checkout_path
     end
 
     it 'should check if the user is authorized for :edit' do
       order.stub :update_attributes => true
       controller.should_receive(:authorize!).with(:edit, order, token)
-      put :update_registration, { :order => { :email => 'jobs@railsdog.com' } }, { :access_token => token }
+      put :update_registration, { :order => { :email => 'jobs@spreecommerce.com' } }, { :access_token => token }
     end
   end
 end

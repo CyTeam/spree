@@ -57,6 +57,7 @@ Spree::Core::Engine.routes.draw do
 
 
   namespace :admin do
+    resources :adjustments
     resources :zones
     resources :users
     resources :countries do
@@ -88,6 +89,7 @@ Spree::Core::Engine.routes.draw do
         collection do
           get :available
           get :selected
+          post :update_positions
         end
       end
       resources :taxons do
@@ -199,5 +201,5 @@ Spree::Core::Engine.routes.draw do
   match '/admin', :to => 'admin/orders#index', :as => :admin
 
   match '/content/cvv', :to => 'content#cvv'
-  match '/content/*path', :to => 'content#show', :via => :get
+  match '/content/*path', :to => 'content#show', :via => :get, :as => :content
 end

@@ -14,7 +14,7 @@ module Spree
         end
 
         # Include list of visited paths in notification payload hash
-        Spree::Core::ControllerHelpers::InstanceMethods.class_eval do
+        Spree::Core::ControllerHelpers.class_eval do
           def default_notification_payload
             { :user => current_user, :order => current_order, :visited_paths => session[:visited_paths] }
           end
@@ -46,7 +46,6 @@ module Spree
           Spree::Promotion::Rules::Product,
           Spree::Promotion::Rules::User,
           Spree::Promotion::Rules::FirstOrder,
-          Spree::Promotion::Rules::LandingPage,
           Spree::Promotion::Rules::UserLoggedIn]
       end
 
@@ -54,6 +53,7 @@ module Spree
         app.config.spree.promotions.actions = [Spree::Promotion::Actions::CreateAdjustment,
           Spree::Promotion::Actions::CreateLineItems]
       end
+
     end
   end
 end

@@ -10,7 +10,7 @@ module Spree
         text = "#{text}: (#{t('empty')})"
         css_class = 'empty'
       else
-        text = "#{text}: (#{current_order.item_count}) #{order_subtotal(current_order)}".html_safe
+        text = "#{text}: (#{current_order.item_count})  <span class='amount'>#{order_subtotal(current_order)}</span>".html_safe
         css_class = 'full'
       end
 
@@ -105,12 +105,12 @@ module Spree
       if taxon
         crumbs << content_tag(:li, link_to(t(:products) , products_path) + separator)
         crumbs << taxon.ancestors.collect { |ancestor| content_tag(:li, link_to(ancestor.name , seo_url(ancestor)) + separator) } unless taxon.ancestors.empty?
-        crumbs << content_tag(:li, content_tag(:span, taxon.name))
+        crumbs << content_tag(:li, content_tag(:span, link_to(taxon.name , seo_url(taxon))))
       else
         crumbs << content_tag(:li, content_tag(:span, t(:products)))
       end
-      crumb_list = content_tag(:ul, raw(crumbs.flatten.map{|li| li.mb_chars}.join))
-      content_tag(:div, crumb_list + tag(:br, {:class => 'clear'}, false, true), :id => 'breadcrumbs')
+      crumb_list = content_tag(:ul, raw(crumbs.flatten.map{|li| li.mb_chars}.join), :class => 'inline')
+      content_tag(:div, crumb_list, :id => 'breadcrumbs')
     end
 
     def taxons_tree(root_taxon, current_taxon, max_level = 1)
@@ -127,8 +127,11 @@ module Spree
     end
 
     def available_countries
-      return Country.all unless zone = Zone.find_by_name(Spree::Config[:checkout_zone])
-      zone.country_list
+      countries = Zone.find_by_name(Spree::Config[:checkout_zone]).try(:country_list) || Country.all
+      countries.collect do |c| 
+        c.name = I18n.t(c.name, :scope => 'countries', :default => c.name)
+        c 
+      end.sort{ |a,b| a.name <=> b.name }
     end
 
     def format_price(price, options={})

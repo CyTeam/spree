@@ -24,7 +24,7 @@ describe "Promotion Adjustments" do
 
     let!(:address) { Factory(:address, :state => Spree::State.first) }
 
-    pending "should allow an admin to create a flat rate discount coupon promo" do
+    it "should allow an admin to create a flat rate discount coupon promo" do
       fill_in "Name", :with => "Order's total > $30"
       fill_in "Usage Limit", :with => "100"
       select "Coupon code added", :from => "Event"
@@ -41,6 +41,7 @@ describe "Promotion Adjustments" do
       within('#action_fields') { click_button "Add" }
       select "Flat Rate (per order)", :from => "Calculator"
       within('#actions_container') { click_button "Update" }
+
       within('.calculator-fields') { fill_in "Amount", :with => "5" }
       within('#actions_container') { click_button "Update" }
 
@@ -58,12 +59,18 @@ describe "Promotion Adjustments" do
       check "order_use_billing"
       click_button "Save and Continue"
       click_button "Save and Continue"
+
+      choose('Credit Card')
+      fill_in "card_number", :with => "4111111111111111"
+      fill_in "card_code", :with => "123"
+
       fill_in "order_coupon_code", :with => "ORDER_38"
       click_button "Save and Continue"
-      Spree::Order.first.total.to_f.should == 52.00
+
+      Spree::Order.last.adjustments.promotion.map(&:amount).sum.should == -5.0
     end
 
-    pending "should allow an admin to create a single user coupon promo with flat rate discount" do
+    it "should allow an admin to create a single user coupon promo with flat rate discount" do
       fill_in "Name", :with => "Order's total > $30"
       fill_in "Usage Limit", :with => "1"
       select "Coupon code added", :from => "Event"
@@ -98,15 +105,22 @@ describe "Promotion Adjustments" do
       click_button "Save and Continue"
       click_button "Save and Continue"
       fill_in "order_coupon_code", :with => "SINGLE_USE"
+
+      choose('Credit Card')
+      fill_in "card_number", :with => "4111111111111111"
+      fill_in "card_code", :with => "123"
       click_button "Save and Continue"
-      Spree::Order.first.total.to_f.should == 52.00
+
+      Spree::Order.first.total.to_f.should == 45.00
+
+      click_button "Place Order"
 
       user = Factory(:user, :email => "john@test.com", :password => "secret", :password_confirmation => "secret")
       click_link "Logout"
-      click_link "Log In"
+      click_link "Login"
       fill_in "user_email", :with => user.email
       fill_in "user_password", :with => user.password
-      click_button "Log In"
+      click_button "Login"
 
       visit spree.root_path
       click_link "RoR Mug"
@@ -122,12 +136,17 @@ describe "Promotion Adjustments" do
       check "order_use_billing"
       click_button "Save and Continue"
       click_button "Save and Continue"
+
+      choose('Credit Card')
+      fill_in "card_number", :with => "4111111111111111"
+      fill_in "card_code", :with => "123"
       fill_in "order_coupon_code", :with => "SINGLE_USE"
       click_button "Save and Continue"
-      Spree::Order.last.total.to_f.should == 52.00
+
+      Spree::Order.last.total.to_f.should == 50.00
     end
 
-    pending "should allow an admin to create an automatic promo with flat percent discount" do
+    it "should allow an admin to create an automatic promo with flat percent discount" do
       fill_in "Name", :with => "Order's total > $30"
       fill_in "Code", :with => ""
       select "Order contents changed", :from => "Event"
@@ -156,7 +175,7 @@ describe "Promotion Adjustments" do
       Spree::Order.last.total.to_f.should == 54.00
     end
 
-    pending "should allow an admin to create an automatic promotion with free shipping" do
+    it "should allow an admin to create an automatic promotion with free shipping (no code)" do
       fill_in "Name", :with => "Free Shipping"
       fill_in "Code", :with => ""
       click_button "Create"
@@ -186,8 +205,12 @@ describe "Promotion Adjustments" do
       check "order_use_billing"
       click_button "Save and Continue"
       click_button "Save and Continue"
+
+      choose('Credit Card')
+      fill_in "card_number", :with => "4111111111111111"
+      fill_in "card_code", :with => "123"
       click_button "Save and Continue"
-      Spree::Order.last.total.to_f.should == 31.00
+      Spree::Order.last.total.to_f.should == 30.00 # bag(20) + shipping(10)
       page.should_not have_content("Free Shipping")
 
       visit spree.root_path
@@ -204,21 +227,21 @@ describe "Promotion Adjustments" do
       check "order_use_billing"
       click_button "Save and Continue"
       click_button "Save and Continue"
+      choose('Credit Card')
+      fill_in "card_number", :with => "4111111111111111"
+      fill_in "card_code", :with => "123"
+
       click_button "Save and Continue"
-      Spree::Order.last.total.to_f.should == 63.00
+      Spree::Order.last.total.to_f.should == 60.00 # bag(20) + mug(40) + free shipping(0)
       page.should have_content("Free Shipping")
     end
 
-    pending "should allow an admin to create an automatic promo requiring a landing page to be visited" do
+    it "should allow an admin to create an automatic promo requiring a landing page to be visited" do
       fill_in "Name", :with => "Deal"
-      select "Order contents changed", :from => "Event"
+      select "Visit static content page", :from => "Event"
+      fill_in "Path", :with => "content/cvv"
       click_button "Create"
       page.should have_content("Editing Promotion")
-
-      select "Landing Page", :from => "Add rule of type"
-      within('#rule_fields') { click_button "Add" }
-      fill_in "Path", :with => "content/cvv"
-      within('#rule_fields') { click_button "Update" }
 
       select "Create adjustment", :from => "Add action of type"
       within('#action_fields') { click_button "Add" }
@@ -239,7 +262,7 @@ describe "Promotion Adjustments" do
       Spree::Order.last.total.to_f.should == 76.00
     end
 
-    pending "ceasing to be eligible for a promotion with item total rule then becoming eligible again" do
+    it "ceasing to be eligible for a promotion with item total rule then becoming eligible again" do
       fill_in "Name", :with => "Spend over $50 and save $5"
       select "Order contents changed", :from => "Event"
       click_button "Create"
@@ -265,17 +288,17 @@ describe "Promotion Adjustments" do
       fill_in "order[line_items_attributes][0][quantity]", :with => "2"
       click_button "Update"
       Spree::Order.last.total.to_f.should == 40.00
-      Spree::Order.last.adjustments.promotion.count.should == 0
+      Spree::Order.last.adjustments.eligible.promotion.count.should == 0
 
       fill_in "order[line_items_attributes][0][quantity]", :with => "3"
       click_button "Update"
       Spree::Order.last.total.to_f.should == 55.00
-      Spree::Order.last.adjustments.promotion.count.should == 1
+      Spree::Order.last.adjustments.eligible.promotion.count.should == 1
 
       fill_in "order[line_items_attributes][0][quantity]", :with => "2"
       click_button "Update"
       Spree::Order.last.total.to_f.should == 40.00
-      Spree::Order.last.adjustments.promotion.count.should == 1
+      Spree::Order.last.adjustments.eligible.promotion.count.should == 0
 
       fill_in "order[line_items_attributes][0][quantity]", :with => "3"
       click_button "Update"
@@ -320,6 +343,86 @@ describe "Promotion Adjustments" do
       fill_in "order[line_items_attributes][0][quantity]", :with => "3"
       click_button "Update"
       Spree::Order.last.total.to_f.should == 54.00
+    end
+
+    # Regression test for #836 (#839 included too)
+    context "provides a promotion for the first order for a new user" do
+      before do
+        fill_in "Name", :with => "Sign up"
+        select "User signup", :from => "Event"
+        click_button "Create"
+        page.should have_content("Editing Promotion")
+        select "First order", :from => "Add rule of type"
+        within("#rule_fields") { click_button "Add" }
+        select "Create adjustment", :from => "Add action of type"
+        within("#actions_container") { click_button "Add" }
+        select "Flat Percent", :from => "Calculator"
+        within(".calculator-fields") { fill_in "Flat Percent", :with => "10" }
+        within("#actions_container") { click_button "Update" }
+
+        visit spree.root_path
+        click_link "Logout"
+      end
+
+      # Regression test for #839
+      it "doesn't blow up the signup page" do
+        visit "/signup"
+        fill_in "Email", :with => "user@example.com"
+        fill_in "Password", :with => "Password"
+        fill_in "Password Confirmation", :with => "Password"
+        click_button "Create"
+        # Regression test for #839
+        page.should_not have_content("undefined method `user' for nil:NilClass")
+      end
+
+      context "with an order" do
+        before do
+          click_link "RoR Mug"
+          click_button "Add To Cart"
+        end
+
+        # Test covering scenario in #836
+        it "correctly applies the adjustment" do
+          visit "/checkout"
+          fill_in "order_email", :with => "user@example.com"
+          click_button "Continue"
+          within("#checkout-summary") do
+            page.should have_content("Promotion (Sign up)")
+          end
+        end
+
+        it "correctly applies the adjustment if a user signs up as a real user" do
+          visit "/signup"
+          fill_in "Email", :with => "user@example.com"
+          fill_in "Password", :with => "password"
+          fill_in "Password Confirmation", :with => "password"
+          click_button "Create"
+          visit "/checkout"
+          within("#checkout-summary") do
+            page.should have_content("Promotion (Sign up)")
+          end
+        end
+      end
+
+      # Covering the registration prior to order case for #836
+      context "without an order" do
+        it "signing up, then placing an order" do
+          visit '/signup'
+          fill_in "Email", :with => "user@example.com"
+          fill_in "Password", :with => "password"
+          fill_in "Password Confirmation", :with => "password"
+          click_button "Create"
+
+          click_link "RoR Mug"
+          click_button "Add To Cart"
+
+          visit "/checkout"
+
+          within("#checkout-summary") do
+            page.should have_content("Promotion (Sign up)")
+          end
+        end
+      end
     end
   end
 end

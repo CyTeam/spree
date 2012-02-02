@@ -1,7 +1,7 @@
 module Spree
   class Order < ActiveRecord::Base
     attr_accessible :line_items, :bill_address_attributes, :ship_address_attributes, :payments_attributes,
-                    :ship_address, :bill_address, :line_items_attributes,
+                    :ship_address, :bill_address, :line_items_attributes, :number,
                     :shipping_method_id, :email, :use_billing, :special_instructions
 
     belongs_to :user
@@ -87,7 +87,7 @@ module Spree
     end
 
     # order state machine (see http://github.com/pluginaweek/state_machine/tree/master for details)
-    state_machine :initial => :cart, :use_transactions => false do
+    state_machine :initial => 'cart', :use_transactions => false do
 
       event :next do
         transition :from => 'cart',     :to => 'address'
@@ -120,11 +120,7 @@ module Spree
         begin
           order.process_payments!
         rescue Core::GatewayError
-          if Spree::Config[:allow_checkout_on_gateway_error]
-            true
-          else
-            false
-          end
+          !!Spree::Config[:allow_checkout_on_gateway_error]
         end
       end
 
@@ -296,6 +292,11 @@ module Spree
 
     def contains?(variant)
       line_items.detect { |line_item| line_item.variant_id == variant.id }
+    end
+
+    def quantity_of(variant)
+      line_item = line_items.find { |line_item| line_item.variant_id == variant.id }
+      line_item ? line_item.quantity : 0
     end
 
     def ship_total
@@ -517,7 +518,7 @@ module Spree
       # Adjustments will check if they are still eligible. Ineligible adjustments are preserved but not counted
       # towards adjustment_total.
       def update_adjustments
-        self.adjustments.reload.each(&:update!)
+        self.adjustments.reload.each { |adjustment| adjustment.update!(self) }
       end
 
       # Determine if email is required (we don't want validation errors before we hit the checkout)
@@ -547,7 +548,7 @@ module Spree
         shipments.each do |shipment|
           shipment.inventory_units.each do |inventory_unit|
             line_item = line_items.find_by_variant_id(inventory_unit.variant_id)
-            Spree::InventoryUnit.decrease(self, inventory_unit.variant, line_item.quantity)
+            InventoryUnit.decrease(self, inventory_unit.variant, line_item.quantity)
           end
         end
       end
@@ -560,7 +561,7 @@ module Spree
         shipments.each do |shipment|
           shipment.inventory_units.each do |inventory_unit|
             line_item = line_items.find_by_variant_id(inventory_unit.variant_id)
-            Spree::InventoryUnit.increase(self, inventory_unit.variant, line_item.quantity)
+            InventoryUnit.increase(self, inventory_unit.variant, line_item.quantity)
           end
         end
       end

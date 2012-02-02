@@ -1,16 +1,10 @@
 module Spree
   class Promotion < Spree::Activator
     MATCH_POLICIES = %w(all any)
+    UNACTIVATABLE_ORDER_STATES = ["complete", "awaiting_return", "returned"]
 
-    preference :usage_limit, :integer
-    preference :match_policy, :string, :default => MATCH_POLICIES.first
-    preference :code, :string
-    preference :advertise, :boolean, :default => false
-
-    [:usage_limit, :match_policy, :code, :advertise].each do |field|
-      alias_method field, "preferred_#{field}"
-      alias_method "#{field}=", "preferred_#{field}="
-    end
+    Activator.event_names << 'spree.checkout.coupon_code_added'
+    Activator.event_names << 'spree.content.visited'
 
     has_many :promotion_rules, :foreign_key => 'activator_id', :autosave => true, :dependent => :destroy
     alias_method :rules, :promotion_rules
@@ -20,8 +14,6 @@ module Spree
     alias_method :actions, :promotion_actions
     accepts_nested_attributes_for :promotion_actions
 
-    after_create :update_preferences
-
     # TODO: This shouldn't be necessary with :autosave option but nested attribute updating of actions is broken without it
     after_save :save_rules_and_actions
     def save_rules_and_actions
@@ -29,33 +21,12 @@ module Spree
     end
 
     validates :name, :presence => true
-    #validates :preferred_code, :presence => true, :if => lambda{|r| r.event_name == 'spree.checkout.coupon_code_added' }
+    validates :code, :presence => true, :if => lambda{|r| r.event_name == 'spree.checkout.coupon_code_added' }
+    validates :path, :presence => true, :if => lambda{|r| r.event_name == 'spree.content.visited' }
+    validates :usage_limit, :numericality => { :greater_than => 0, :allow_nil => true }
 
-    %w(usage_limit match_policy code advertise).each do |pref|
-      method_name = pref.to_sym
-      define_method method_name do
-        get_preference(pref.to_sym)
-      end
-
-      method_name = "#{pref}=".to_sym
-      define_method method_name do |value|
-        unless new_record?
-          pref = value
-        else
-          @preferences_hash ||= {}
-          @preferences_hash[pref.to_sym] = value
-        end
-      end
-    end
-
-    class << self
-      def advertised
-        #TODO this is broken because the new preferences aren't a direct relationship returning
-        #all for now
-        where(true)
-        #includes(:stored_preferences)
-        #includes(:stored_preferences).where(:spree_preferences => {:name => 'advertise', :value => '1'})
-      end
+    def self.advertised
+      where(:advertise => true)
     end
 
     # TODO: Remove that after fix for https://rails.lighthouseapp.com/projects/8994/tickets/4329-has_many-through-association-does-not-link-models-on-association-save
@@ -67,31 +38,42 @@ module Spree
     end
 
     def activate(payload)
-      # Since multiple promotions could be listening we need to make sure the
-      # event applies to this one.
-      if eligible?(payload[:order], payload)
-        actions.each do |action|
-          action.perform(payload)
-        end
+      return unless order_activatable? payload[:order]
+
+      if code.present?
+        event_code = payload[:coupon_code].to_s.strip.downcase
+        return unless event_code == self.code.to_s.strip.downcase
+      end
+
+      if path.present?
+        return unless path == payload[:path]
+      end
+
+      actions.each do |action|
+        action.perform(payload)
       end
     end
 
-    # Whether the promotion is eligible for this particular order.
-    def eligible?(order, options = {})
+    # called anytime order.update! happens
+    def eligible?(order)
       return false if expired? || usage_limit_exceeded?(order)
-      if event_code = options[:coupon_code].to_s.strip.downcase
-        return false unless event_code == self.code.to_s.strip.downcase
-      end
-      rules_are_eligible?(order, options)
+      rules_are_eligible?(order, {})
     end
 
     def rules_are_eligible?(order, options = {})
       return true if rules.none?
+      eligible = lambda { |r| r.eligible?(order, options) }
       if match_policy == 'all'
-        rules.all?{|r| r.eligible?(order, options)}
+        rules.all?(&eligible)
       else
-        rules.any?{|r| r.eligible?(order, options)}
+        rules.any?(&eligible)
       end
+    end
+
+    def order_activatable?(order)
+      order &&
+      created_at.to_i < order.created_at.to_i &&
+      !UNACTIVATABLE_ORDER_STATES.include?(order.state)
     end
 
     # Products assigned to all product rules
@@ -100,7 +82,7 @@ module Spree
     end
 
     def usage_limit_exceeded?(order = nil)
-      preferred_usage_limit.present? && preferred_usage_limit.to_i > 0 && adjusted_credits_count(order) >= preferred_usage_limit.to_i
+      usage_limit.present? && usage_limit > 0 && adjusted_credits_count(order) >= usage_limit
     end
 
     def adjusted_credits_count(order)
@@ -116,16 +98,5 @@ module Spree
       credits.count
     end
 
-
-    private
-
-    def update_preferences
-      if @preferences_hash.present? && !@preferences_hash.empty?
-        @preferences_hash.each do |key, value|
-          pref_key = "spree/promotion/#{key}/#{self.id}"
-          Spree::Preference.create(:value => value, :key => pref_key)
-        end
-      end
-    end
   end
 end

@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.8.7'
   s.author      = 'Sean Schofield'
-  s.email       = 'sean@railsdog.com'
+  s.email       = 'sean@spreecommerce.com'
   s.homepage    = 'http://spreecommerce.com'
 
   s.files        = Dir['LICENSE', 'README.md', 'app/**/*', 'config/**/*', 'lib/**/*', 'db/**/*']
@@ -18,6 +18,6 @@ Gem::Specification.new do |s|
   s.requirements << 'none'
 
   s.add_dependency 'spree_core', version
-  s.add_dependency 'devise', '= 1.4.8'
+  s.add_dependency 'devise', '= 1.5.3'
   s.add_dependency 'cancan', '= 1.6.7'
 end

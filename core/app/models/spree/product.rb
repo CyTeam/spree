@@ -40,9 +40,9 @@ module Spree
     after_create :add_properties_and_option_types_from_prototype
     before_save :recalculate_count_on_hand
     after_save :update_memberships if ProductGroup.table_exists?
-    after_save :set_master_on_hand_to_zero_when_product_has_variants
     after_save :save_master
-
+    after_save :set_master_on_hand_to_zero_when_product_has_variants
+    
     has_many :variants,
       :class_name => 'Spree::Variant',
       :conditions => ["#{::Spree::Variant.quoted_table_name}.is_master = ? AND #{::Spree::Variant.quoted_table_name}.deleted_at IS NULL", false],
@@ -69,6 +69,13 @@ module Spree
     make_permalink
 
     alias :options :product_option_types
+
+    after_initialize :ensure_master
+
+    def ensure_master
+      return unless self.new_record?
+      self.master ||= Variant.new
+    end
 
     def to_param
       return permalink if permalink.present?
@@ -180,8 +187,7 @@ module Spree
     private
       def recalculate_count_on_hand
         product_count_on_hand = has_variants? ?
-          variants.inject(0) { |acc, v| acc + v.count_on_hand } :
-          (master ? master.count_on_hand : 0)
+          variants.sum(:count_on_hand) : (master ? master.count_on_hand : 0)
         self.count_on_hand = product_count_on_hand
       end
 

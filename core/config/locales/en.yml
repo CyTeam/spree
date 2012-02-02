@@ -263,6 +263,7 @@ en:
   assign_taxons: "Assign Taxons"
   authorization_failure: "Authorization Failure"
   authorized: Authorized
+  availability: "Availability"
   available_on: "Available On"
   available_taxons: "Available Taxons"
   awaiting_return: Awaiting Return
@@ -384,6 +385,7 @@ en:
   enable_login_via_login_password: "Use standard email/password"
   enable_login_via_openid: "Use OpenID instead"
   enable_mail_delivery: Enable Mail Delivery
+  ending_in: "Ending in"
   enter_exactly_as_shown_on_card: Please enter exactly as shown on the card
   enter_at_least_five_letters: Enter at least five letters of customer name
   enter_password_to_confirm: "(we need your current password to confirm your changes)"
@@ -493,12 +495,11 @@ en:
   live: "Live"
   loading: Loading
   locale_changed: "Locale Changed"
-  log_in: "Log In"
   logged_in_as: "Logged in as"
   logged_in_succesfully: "Logged in successfully"
   logged_out: "You have been logged out."
   login: Login
-  login_as_existing: "Log In as Existing Customer"
+  login_as_existing: "Login as Existing Customer"
   login_failed: "Login authentication failed."
   login_name: Login
   logout: Logout
@@ -511,6 +512,11 @@ en:
   make_refund: Make refund
   mark_shipped: "Mark Shipped"
   master_price: "Master Price"
+  match_choices:
+    none: "None"
+    one: "One"
+    all: "All"
+  match_rule: "Products That Must Match:"
   max_items: Max Items
   meta_description: "Meta Description"
   meta_keywords: "Meta Keywords"
@@ -611,6 +617,7 @@ en:
     payment: payment
     resumed: resumed
     returned: returned
+    skrill: skrill
   order_summary: Order Summary
   order_sure_want_to: "Are you sure you want to %{event} this order?"
   order_total: "Order Total"
@@ -885,6 +892,7 @@ en:
   shipping_categories: "Shipping Categories"
   shipping_categories_description: "Manage shipping categories to identify which products can be shipped via which method."
   shipping_category: Shipping Category
+  shipping_category_choose: "Shipping Category"
   shipping_cost: Cost
   shipping_error: "Shipping Error"
   shipping_instructions: "Shipping Instructions"

@@ -49,7 +49,7 @@ task :clean do
   puts "Deleting pkg directory.."
   FileUtils.rm_rf("pkg")
 
-  %w(api auth core dash promo).each do |gem_name|
+  %w(api auth cmd core dash promo).each do |gem_name|
     puts "Cleaning #{gem_name}:"
     puts "  Deleting #{gem_name}/Gemfile"
     FileUtils.rm_f("#{gem_name}/Gemfile")
@@ -65,7 +65,7 @@ end
 namespace :gem do
   desc "run rake gem for all gems"
   task :build do
-    %w(core auth api dash promo sample).each do |gem_name|
+    %w(core auth api dash promo sample cmd).each do |gem_name|
       puts "########################### #{gem_name} #########################"
       puts "Deleting #{gem_name}/pkg"
       FileUtils.rm_rf("#{gem_name}/pkg")
@@ -82,7 +82,7 @@ namespace :gem do
   task :install do
     version = File.read(File.expand_path("../SPREE_VERSION", __FILE__)).strip
 
-    %w(core auth api dash promo sample).each do |gem_name|
+    %w(core auth api dash promo sample cmd).each do |gem_name|
       puts "########################### #{gem_name} #########################"
       puts "Deleting #{gem_name}/pkg"
       FileUtils.rm_rf("#{gem_name}/pkg")
@@ -101,7 +101,7 @@ namespace :gem do
   task :release do
     version = File.read(File.expand_path("../SPREE_VERSION", __FILE__)).strip
 
-    %w(core auth api dash promo sample).each do |gem_name|
+    %w(core auth api dash promo sample cmd).each do |gem_name|
       puts "########################### #{gem_name} #########################"
       cmd = "cd #{gem_name}/pkg && gem push spree_#{gem_name}-#{version}.gem"; puts cmd; system cmd
     end
@@ -114,8 +114,7 @@ task :sandbox do
   require 'spree_core'
 
   Spree::SandboxGenerator.start ["--lib_name=spree", "--database=#{ENV['DB_NAME']}"]
-  Spree::InstallGenerator.start ["--auto-accept", "--test_app", "--skip-install-data"]
+  Spree::InstallGenerator.start ["--auto-accept"]
 
-  cmd = "bundle exec rake db:bootstrap AUTO_ACCEPT=true"; puts cmd; system cmd
   cmd = "bundle exec rake assets:precompile:nondigest"; puts cmd; system cmd
 end
