@@ -270,7 +270,7 @@ describe Spree::Order do
     end
 
     it "should log state event" do
-      order.state_events.should_receive(:create)
+      order.state_changes.should_receive(:create)
       order.finalize!
     end
   end
@@ -346,10 +346,12 @@ describe Spree::Order do
 
   context "#update!" do
     # before { Order.should_receive :update_all }
-
+    let(:line_items) { [mock_model(Spree::LineItem, :amount => 5) ]}
+    
     context "when payments are sufficient" do
       it "should set payment_state to paid" do
         order.stub(:total => 100.01, :payment_total => 100.012343)
+        order.stub(:line_items => line_items)
         order.update!
         order.payment_state.should == "paid"
       end
@@ -379,6 +381,7 @@ describe Spree::Order do
     context "when payments are more than sufficient" do
       it "should set the payment_state to credit_owed" do
         order.stub(:total => 100, :payment_total => 150)
+        order.stub(:line_items => line_items)
         order.update!
         order.payment_state.should == "credit_owed"
       end
@@ -434,7 +437,7 @@ describe Spree::Order do
         order.update!
       end
     end
-
+    
     context "when there is a single checkout payment" do
       before { order.stub(:payment => mock_model(Spree::Payment, :checkout? => true, :amount => 11), :total => 22) }
 
@@ -511,6 +514,14 @@ describe Spree::Order do
       end
     end
 
+  end
+
+  context "#update_payment_state" do    
+    it "should set payment_state to balance_due if no line_item" do
+      order.stub(:line_items => [])
+      order.update!
+      order.payment_state.should == "balance_due"
+    end    
   end
 
   context "#payment_method" do
@@ -936,4 +947,5 @@ describe Spree::Order do
       end
     end
   end
+
 end

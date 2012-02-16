@@ -9,7 +9,6 @@ en:
   account_updated: "Account updated!"
   action: Action
   actions:
-    cancel: Cancel
     create: Create
     destroy: Destroy
     list: List
@@ -49,22 +48,6 @@ en:
         price: Price
         quantity: Quantity
       spree/order:
-        bill_address:
-          address1: "Billing address street"
-          city: "Billing address city"
-          firstname: "Billing address first name"
-          lastname: "Billing address last name"
-          phone: "Billing address phone"
-          state: "Billing address state"
-          zipcode: "Billing address zipcode"
-        ship_address:
-          address1: "Shipping address street"
-          city: "Shipping address city"
-          firstname: "Shipping address first name"
-          lastname: "Shipping address last name"
-          phone: "Shipping address phone"
-          state: "Shipping address state"
-          zipcode: "Shipping address zipcode"
         checkout_complete: "Checkout Complete"
         completed_at: "Completed At"
         ip_address: "IP Address"
@@ -73,6 +56,22 @@ en:
         special_instructions: "Special Instructions"
         state: State
         total: Total
+      spree/order/bill_address:
+          address1: "Billing address street"
+          city: "Billing address city"
+          firstname: "Billing address first name"
+          lastname: "Billing address last name"
+          phone: "Billing address phone"
+          state: "Billing address state"
+          zipcode: "Billing address zipcode"
+      spree/order/ship_address:
+          address1: "Shipping address street"
+          city: "Shipping address city"
+          firstname: "Shipping address first name"
+          lastname: "Shipping address last name"
+          phone: "Shipping address phone"
+          state: "Shipping address state"
+          zipcode: "Shipping address zipcode"
       spree/option_type:
         name: Name
         presentation: Presentation
@@ -252,6 +251,7 @@ en:
   alternative_phone: Alternative Phone
   amount: Amount
   analytics_trackers: Analytics Trackers
+  and: and
   apply: "Apply"
   are_you_sure: "Are you sure?"
   are_you_sure_category: "Are you sure you want to delete this category?"
@@ -358,6 +358,7 @@ en:
   didnt_receive_unlock_instructions: "Didn't receive unlock instructions?"
   discount_amount: "Discount Amount"
   display: Display
+  dismiss_banner: "No. Thanks! I'm not interested, do not display this message again"
   edit: Edit
   editing_billing_integration: Editing Billing Integration
   editing_category: "Editing Category"
@@ -399,6 +400,7 @@ en:
   errors_prohibited_this_record_from_being_saved:
     one: "1 error prohibited this record from being saved"
     other: "%{count} errors prohibited this record from being saved"
+  error_user_destroy_with_orders: "Users with completed orders may not be deleted"
   event: Event
   events:
     spree:
@@ -645,6 +647,8 @@ en:
   payment_methods: Payment Methods
   payment_methods_setting_description: Configure methods customers can use to pay.
   payment_processing_failed: "Payment could not be processed, please check the details you entered"
+  payment_processor_choose_banner_text: "If you need help choosing a payment processor, please visit"
+  payment_processor_choose_link: "our payments page"
   payment_state: Payment State
   payment_states:
     balance_due: balance due
@@ -668,7 +672,7 @@ en:
   preview: Preview
   previous: Previous
   price: Price
-  price_bucket: Price Bucket
+  price_sack: Price Sack
   price_range: Price Range
   problem_authorizing_card: "Problem authorizing credit card"
   problem_capturing_card: "Problem capturing credit card"

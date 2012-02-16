@@ -51,7 +51,7 @@ module Spree
             Spree::Calculator::FlatRate,
             Spree::Calculator::FlexiRate,
             Spree::Calculator::PerItem,
-            Spree::Calculator::PriceBucket]
+            Spree::Calculator::PriceSack]
 
          app.config.spree.calculators.tax_rates = [
             Spree::Calculator::DefaultTax]
@@ -71,7 +71,7 @@ module Spree
 
       # sets the manifests / assets to be precompiled
       initializer "spree.assets.precompile" do |app|
-        app.config.assets.precompile += ['store/all.*', 'admin/all.*', 'admin/orders/edit_form.js', 'jqPlot/excanvas.min.js', 'admin/images/new.js', 'jquery.jstree/themes/apple/*']
+        app.config.assets.precompile += ['store/all.*', 'admin/all.*', 'admin/orders/edit_form.js', 'admin/orders/address_states.js', 'jqPlot/excanvas.min.js', 'admin/images/new.js', 'jquery.jstree/themes/apple/*']
       end
 
       initializer "spree.asset.pipeline" do |app|

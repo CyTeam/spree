@@ -9,7 +9,7 @@ module Spree
     belongs_to :ship_address, :foreign_key => 'ship_address_id', :class_name => 'Spree::Address'
     belongs_to :shipping_method
 
-    has_many :state_events, :as => :stateful
+    has_many :state_changes, :as => :stateful
     has_many :line_items, :dependent => :destroy
     has_many :inventory_units
     has_many :payments, :dependent => :destroy
@@ -56,7 +56,7 @@ module Spree
       self.update_hooks.add(hook)
     end
 
-    # For compatiblity with Calculator::PriceBucket
+    # For compatiblity with Calculator::PriceSack
     def amount
       line_items.map(&:amount).sum
     end
@@ -122,6 +122,10 @@ module Spree
         rescue Core::GatewayError
           !!Spree::Config[:allow_checkout_on_gateway_error]
         end
+      end
+
+      before_transition :to => ['delivery'] do |order|
+        order.shipments.each { |s| s.destroy unless s.shipping_method.available_to_order?(order) }
       end
 
       after_transition :to => 'complete', :do => :finalize!
@@ -212,8 +216,8 @@ module Spree
 
     def restore_state
       # pop the resume event so we can see what the event before that was
-      state_events.pop if state_events.last.name == 'resume'
-      update_attribute('state', state_events.last.previous_state)
+      state_changes.pop if state_changes.last.name == 'resume'
+      update_attribute('state', state_changes.last.previous_state)
 
       if paid?
         raise 'do something with inventory'
@@ -242,7 +246,7 @@ module Spree
 
     def allow_resume?
       # we shouldn't allow resume for legacy orders b/c we lack the information necessary to restore to a previous state
-      return false if state_events.empty? || state_events.last.previous_state.nil?
+      return false if state_changes.empty? || state_changes.last.previous_state.nil?
       true
     end
 
@@ -363,7 +367,7 @@ module Spree
       adjustments.optional.each { |adjustment| adjustment.update_attribute('locked', true) }
       OrderMailer.confirm_email(self).deliver
 
-      self.state_events.create({
+      self.state_changes.create({
         :previous_state => 'cart',
         :next_state     => 'complete',
         :name           => 'order' ,
@@ -458,7 +462,7 @@ module Spree
         self.shipment_state = 'backorder' if backordered?
 
         if old_shipment_state = self.changed_attributes['shipment_state']
-          self.state_events.create({
+          self.state_changes.create({
             :previous_state => old_shipment_state,
             :next_state     => self.shipment_state,
             :name           => 'shipment',
@@ -476,7 +480,9 @@ module Spree
       #
       # The +payment_state+ value helps with reporting, etc. since it provides a quick and easy way to locate Orders needing attention.
       def update_payment_state
-        if round_money(payment_total) < round_money(total)
+        
+        #line_item are empty when user empties cart
+        if self.line_items.empty? || round_money(payment_total) < round_money(total)
           self.payment_state = 'balance_due'
           self.payment_state = 'failed' if payments.present? and payments.last.state == 'failed'
         elsif round_money(payment_total) > round_money(total)
@@ -486,7 +492,7 @@ module Spree
         end
 
         if old_payment_state = self.changed_attributes['payment_state']
-          self.state_events.create({
+          self.state_changes.create({
             :previous_state => old_payment_state,
             :next_state     => self.payment_state,
             :name           => 'payment',
